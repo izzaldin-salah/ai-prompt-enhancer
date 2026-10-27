@@ -1,0 +1,10 @@
+{
+  "description": "Turn Egyptian Arabic and English tech ideas into structured prompts for AI coding agents, with voice input, clarifications, and quick refinements.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
