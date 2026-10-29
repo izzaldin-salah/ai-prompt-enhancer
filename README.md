@@ -127,6 +127,55 @@ Open **`http://localhost:8443`** in your browser.
 
 ---
 
-## 📄 License
+## Mobile installation and offline use
+
+Prompta includes a web app manifest, Android icons (192px and 512px), a separate
+maskable Android icon, and a 180px Apple touch icon. Installation opens the app
+in a standalone window with its own name and theme color.
+
+- **iPhone/iPad:** open the deployed HTTPS URL in Safari, choose **Share → Add to Home Screen**, then **Add**.
+- **Android:** open the deployed HTTPS URL in Chrome and choose **Install app** or **Add to Home screen** from its menu.
+
+Visit once while online so the service worker can cache the interface. Afterward,
+the installed app can reopen offline: you can type thoughts and copy an existing
+generated prompt. AI generation, refinement, voice transcription, and Supabase
+sync require a connection. Unsaved text is held in memory and is lost on reload;
+offline draft persistence and queued cloud sync are not implemented.
+
+The production build generates `dist/sw.js` with the exact HTML, JavaScript, CSS,
+manifest, and icon files for that build. Only these static app files are cached;
+API responses are never cached. Each build gets a content-based cache version.
+Updates activate after all existing app tabs/windows close; reopening uses the
+new version. Old caches for this app and deployment scope are then removed.
+Remote Google Fonts use the system font fallback while offline.
+
+Deploy the complete `dist/` directory over HTTPS (localhost also works for local
+testing). Serve `sw.js` as JavaScript with `Cache-Control: no-cache`, and
+`manifest.webmanifest` as `application/manifest+json`. Avoid rewriting missing
+static files or `sw.js` to `index.html`. Root and nested Vite base paths are
+supported. Service-worker registration runs only in production builds so it
+doesn't interfere with Vite's development hot reload.
+
+```bash
+npm run test:pwa   # Build, then check icons, manifest, emitted files, and worker behavior
+npx tsc --noEmit
+npm run preview   # Inspect the production build, not the development server
+```
+
+For a device check, install from the HTTPS deployment, open it once online,
+close it, turn on airplane mode, and reopen. Confirm the interface and offline
+notice appear, then restore connectivity and confirm AI controls re-enable.
+After deploying an update, open once online, close all app tabs/windows, and
+reopen to activate the update.
+
+To regenerate the committed PNGs on Windows, run
+`powershell -File scripts/generate-icons.ps1`. No image-generation dependency is
+required for builds.
+
+References: [MDN caching guide](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/Caching),
+[MDN app icons](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/How_to/Define_app_icons),
+[Vite deployment base paths](https://vite.dev/guide/build#public-base-path).
+
+## License
 
 This project is licensed under the MIT License.

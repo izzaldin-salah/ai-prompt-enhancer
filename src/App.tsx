@@ -164,6 +164,17 @@ export default function App() {
   const [sections, setSections] = useState<PromptSection[]>([])
   const [refinementInput, setRefinementInput] = useState('')
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
+  const [online, setOnline] = useState(() => navigator.onLine)
+
+  useEffect(() => {
+    const updateConnection = () => setOnline(navigator.onLine)
+    window.addEventListener('online', updateConnection)
+    window.addEventListener('offline', updateConnection)
+    return () => {
+      window.removeEventListener('online', updateConnection)
+      window.removeEventListener('offline', updateConnection)
+    }
+  }, [])
 
   const recorderRef = useRef<AudioRecorder | null>(null)
   const saveTimeoutRef = useRef<number | null>(null)
@@ -224,7 +235,7 @@ export default function App() {
 
   // Trigger Smart Clarification analysis when thought finishes changing
   useEffect(() => {
-    if (mode !== 'Smart' || words < 4 || generated) {
+    if (!online || mode !== 'Smart' || words < 4 || generated) {
       return
     }
 
@@ -239,7 +250,7 @@ export default function App() {
     }, 1200)
 
     return () => window.clearTimeout(timer)
-  }, [thought, mode, domain, words, generated])
+  }, [thought, mode, domain, words, generated, online])
 
   // Auto-save debouncer to Supabase
   const persistSession = (updatedSections = sections) => {
@@ -271,6 +282,7 @@ export default function App() {
 
   // Voice recording handlers
   const handleStartRecording = async () => {
+    if (!online) return
     setMicError(false)
     setMicErrorMessage('')
     try {
@@ -327,7 +339,7 @@ export default function App() {
 
   // Prompt Synthesis
   const handleSynthesize = async () => {
-    if (!thought.trim() || synthesizing) return
+    if (!online || !thought.trim() || synthesizing) return
     setSynthesizing(true)
 
     try {
@@ -352,7 +364,7 @@ export default function App() {
 
   // Refinement handler
   const handleRefine = async (instruction: string) => {
-    if (!instruction.trim() || refining || !generated) return
+    if (!online || !instruction.trim() || refining || !generated) return
     setRefining(true)
 
     try {
@@ -398,8 +410,8 @@ export default function App() {
         </div>
         <div className="header-actions">
           <div className="saved" title="Supabase Cloud Synchronization">
-            <i style={{ background: saveStatus === 'saving' ? '#e2a03f' : '#50a879' }} />
-            {saveStatus === 'saving' ? 'Saving to cloud…' : 'Session saved'}
+            <i style={{ background: !online || saveStatus === 'saving' ? '#e2a03f' : '#50a879' }} />
+            {!online ? 'Offline' : saveStatus === 'saving' ? 'Saving to cloud…' : 'Session saved'}
           </div>
           <div className="viewport-switch" aria-label="Preview size">
             <Button className={!mobile ? 'active' : ''} onClick={() => setMobile(false)} type="button">
@@ -414,6 +426,12 @@ export default function App() {
           </Button>
         </div>
       </header>
+
+      {!online && (
+        <div className="offline-notice" role="status">
+          You’re offline. You can write and copy prompts. AI generation, voice transcription, and cloud sync need a connection.
+        </div>
+      )}
 
       <div className="workspace">
         <section className="input-pane">
@@ -512,7 +530,7 @@ export default function App() {
               <span><i>{langStatus.icon}</i> {langStatus.text}</span>
               <div className="buffer-actions">
                 <span>{words} words</span>
-                <Button className="mic-button" onClick={recording ? handleStopRecording : handleStartRecording} aria-label="Toggle voice recording" type="button">
+                <Button className="mic-button" disabled={!online && !recording} onClick={recording ? handleStopRecording : handleStartRecording} aria-label="Toggle voice recording" type="button">
                   <Icon name="mic" size={15} /> {recording ? 'Stop' : 'Hold to record'}
                 </Button>
               </div>
@@ -558,7 +576,7 @@ export default function App() {
             </Button>
             <Button
               className="synthesize"
-              disabled={!thought.trim() || synthesizing}
+              disabled={!online || !thought.trim() || synthesizing}
               onClick={handleSynthesize}
               type="button"
             >
@@ -632,7 +650,7 @@ export default function App() {
               ].map((chip) => (
                 <Button
                   key={chip}
-                  disabled={!generated || refining}
+                  disabled={!online || !generated || refining}
                   onClick={() => handleRefine(chip)}
                   type="button"
                 >
@@ -648,12 +666,12 @@ export default function App() {
               }}
             >
               <input
-                disabled={!generated || refining}
+                disabled={!online || !generated || refining}
                 value={refinementInput}
                 onChange={(e) => setRefinementInput(e.target.value)}
                 placeholder={refining ? 'Refining prompt with AI…' : 'Ask for a change, e.g. "Use server components and Tailwind v4"'}
               />
-              <Button disabled={!generated || refining || !refinementInput.trim()} aria-label="Submit refinement" type="submit">
+              <Button disabled={!online || !generated || refining || !refinementInput.trim()} aria-label="Submit refinement" type="submit">
                 <Icon name="arrow" />
               </Button>
             </form>

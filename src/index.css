@@ -24,6 +24,7 @@
 }
 
 .button { border: 0; background: none; color: inherit; }
+.offline-notice { padding: 12px 20px; color: var(--green); background: var(--green-soft); border-bottom: 1px solid var(--line); font-size: 13px; line-height: 1.6; }
 .app-shell { min-height: 100vh; background: var(--paper); transition: max-width .3s ease, box-shadow .3s ease; }
 .app-shell.mobile-preview { max-width: 430px; margin: 20px auto; min-height: calc(100vh - 40px); box-shadow: 0 20px 70px #17231d29; border-radius: 20px; overflow: hidden; }
 .topbar { height: 70px; background: var(--surface); border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; padding: 0 28px; position: sticky; top: 0; z-index: 20; }
@@ -191,4 +192,20 @@ h1, h2, h3, p { margin: 0; }
   .output-tools { justify-content: space-between; margin-top: 13px; }
   .clarification { padding: 12px; }
   .answer-chips button { padding: 6px 7px; }
+}
+
+/* Standalone installs extend their surfaces around the notch and home indicator. */
+@media (display-mode: standalone) {
+  .app-shell { min-height: 100dvh; padding-bottom: env(safe-area-inset-bottom, 0px); }
+  .topbar { height: calc(70px + env(safe-area-inset-top, 0px)); padding-top: env(safe-area-inset-top, 0px); padding-left: max(28px, env(safe-area-inset-left, 0px)); padding-right: max(28px, env(safe-area-inset-right, 0px)); }
+  .input-pane, .output-pane { padding-left: max(34px, env(safe-area-inset-left, 0px)); padding-right: max(34px, env(safe-area-inset-right, 0px)); }
+  @media (max-width: 850px) {
+    .topbar { height: calc(62px + env(safe-area-inset-top, 0px)); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+    .input-pane, .output-pane { padding-left: max(18px, env(safe-area-inset-left, 0px)); padding-right: max(18px, env(safe-area-inset-right, 0px)); }
+  }
+}
+
+/* Avoid Safari's automatic zoom when editing a prompt on a touch device. */
+@media (pointer: coarse) {
+  .text-buffer textarea, .custom-answer, .refine-input input { font-size: 16px; }
 }
