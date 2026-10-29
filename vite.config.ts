@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import fs from 'node:fs'
 import path from 'node:path'
+import { promptaPwa } from './scripts/pwa'
 
 import siteConfiguration from './.figma/make/site.json'
 
@@ -26,6 +27,7 @@ react(),
       figmaReactRefreshBoundaryFallback(),
       figmaMakeKitPlugin({ storiesGlob: '/src/**/*.stories.{ts,tsx,js,jsx}' }),
       figmaLinkedPackageSourcemaps(),
+      promptaPwa(),
     ],
     envPrefix: ['VITE_', 'OPENAI_', 'AI_', 'GROQ_', 'SUPABASE_'],
     resolve: {
